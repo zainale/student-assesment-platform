@@ -76,14 +76,17 @@ app.get('/api/tasks', (req, res) => {
 });
 
 app.post('/api/execute', (req, res) => {
-    const { code, expected_output } = req.body;
+    const { code, expected_output, student_id, task_id } = req.body;
     let status = 'Failed';
+    let grade = 0;
     
     if (code.includes('System.out.println') || code.includes('return')) {
         if (code.includes(expected_output)) {
             status = 'Passed';
+            grade = 10;
         } else if (expected_output === 'Hello World' && code.includes('Hello World')) {
             status = 'Passed';
+            grade = 10;
         } else {
             status = 'Compiled - Wrong Output';
         }
@@ -91,7 +94,50 @@ app.post('/api/execute', (req, res) => {
         status = 'Compilation Error';
     }
 
-    res.json({ status, output: status === 'Passed' ? expected_output : 'Error output' });
+    if (student_id && task_id) {
+        db.run('INSERT INTO submissions (task_id, student_id, code, status, grade) VALUES (?, ?, ?, ?, ?)',
+            [task_id, student_id, code, status, grade],
+            (err) => {
+                if (err) console.log(err);
+            }
+        );
+    }
+
+    res.json({ status, output: status === 'Passed' ? expected_output : 'Error output', grade });
+});
+
+app.get('/api/submissions', (req, res) => {
+    db.all(`
+        SELECT submissions.*, users.username, tasks.title 
+        FROM submissions 
+        JOIN users ON submissions.student_id = users.id
+        JOIN tasks ON submissions.task_id = tasks.id
+    `, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/feedbacks', (req, res) => {
+    const { user_id, message } = req.body;
+    const date = new Date().toISOString().split('T')[0];
+    db.run('INSERT INTO feedbacks (user_id, message, date) VALUES (?, ?, ?)',
+        [user_id, message, date], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID });
+        }
+    );
+});
+
+app.get('/api/feedbacks', (req, res) => {
+    db.all(`
+        SELECT feedbacks.*, users.username 
+        FROM feedbacks 
+        JOIN users ON feedbacks.user_id = users.id
+    `, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
 app.listen(3000, () => {
