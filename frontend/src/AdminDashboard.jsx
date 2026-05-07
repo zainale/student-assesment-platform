@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Sidebar from './components/Sidebar';
+import Card from './components/Card';
+import Table from './components/Table';
 
 function AdminDashboard({ setUser }) {
   const [users, setUsers] = useState([]);
@@ -18,11 +21,11 @@ function AdminDashboard({ setUser }) {
   }, []);
 
   const fetchData = async () => {
-    const usersRes = await axios.get('http://localhost:3000/api/users');
+    const usersRes = await axios.get('http://localhost:3005/api/users');
     setUsers(usersRes.data);
-    const secRes = await axios.get('http://localhost:3000/api/sections');
+    const secRes = await axios.get('http://localhost:3005/api/sections');
     setSections(secRes.data);
-    const fbRes = await axios.get('http://localhost:3000/api/feedbacks');
+    const fbRes = await axios.get('http://localhost:3005/api/feedbacks');
     setFeedbacks(fbRes.data);
   };
 
@@ -33,7 +36,7 @@ function AdminDashboard({ setUser }) {
 
   const handleRegisterUser = async (e) => {
     e.preventDefault();
-    await axios.post('http://localhost:3000/api/register', {
+    await axios.post('http://localhost:3005/api/register', {
       username: newUsername,
       password: newPassword,
       role: newRole,
@@ -47,68 +50,51 @@ function AdminDashboard({ setUser }) {
     fetchData();
   };
 
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'register', label: 'Register User' },
+    { id: 'feedbacks', label: 'System Feedbacks' }
+  ];
+
   return (
     <div className="dashboard-container">
-      <div className="sidebar">
-        <h2 className="title" style={{ fontSize: '1.5rem' }}>Admin Panel</h2>
-        <div className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Overview</div>
-        <div className={`nav-item ${activeTab === 'register' ? 'active' : ''}`} onClick={() => setActiveTab('register')}>Register User</div>
-        <div className={`nav-item ${activeTab === 'feedbacks' ? 'active' : ''}`} onClick={() => setActiveTab('feedbacks')}>System Feedbacks</div>
-        <div className="nav-item" onClick={handleLogout}>Logout</div>
-      </div>
+      <Sidebar title="Admin Panel" tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+      
       <div className="main-content">
-        
         {activeTab === 'overview' && (
           <>
-            <div className="card">
-              <h3>Registered Users</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Role</th>
+            <Card title="Registered Users">
+              <Table 
+                headers={['Name', 'Username', 'Role']}
+                data={users}
+                renderRow={(u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.username}</td>
+                    <td><span style={{ padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.85rem' }}>{u.role}</span></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id}>
-                      <td>{u.name}</td>
-                      <td>{u.username}</td>
-                      <td>{u.role}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )}
+              />
+            </Card>
 
-            <div className="card">
-              <h3>Sections</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Section ID</th>
-                    <th>Name</th>
-                    <th>Lecturer ID</th>
+            <Card title="Sections">
+              <Table 
+                headers={['Section ID', 'Name', 'Lecturer ID']}
+                data={sections}
+                renderRow={(s) => (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.name}</td>
+                    <td>{s.lecturer_id}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {sections.map(s => (
-                    <tr key={s.id}>
-                      <td>{s.id}</td>
-                      <td>{s.name}</td>
-                      <td>{s.lecturer_id}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )}
+              />
+            </Card>
           </>
         )}
 
         {activeTab === 'register' && (
-          <div className="card">
-            <h3>Register New User</h3>
+          <Card title="Register New User">
             <form onSubmit={handleRegisterUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '300px' }}>
               <input className="input" placeholder="Full Name" value={newName} onChange={e => setNewName(e.target.value)} required />
               <input className="input" placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required />
@@ -121,31 +107,23 @@ function AdminDashboard({ setUser }) {
               </select>
               <button className="btn" type="submit">Create User</button>
             </form>
-          </div>
+          </Card>
         )}
 
         {activeTab === 'feedbacks' && (
-          <div className="card">
-            <h3>User Feedbacks</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Username</th>
-                  <th>Message</th>
+          <Card title="User Feedbacks">
+            <Table 
+              headers={['Date', 'Username', 'Message']}
+              data={feedbacks}
+              renderRow={(f) => (
+                <tr key={f.id}>
+                  <td>{f.date}</td>
+                  <td>{f.username}</td>
+                  <td>{f.message}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {feedbacks.map(f => (
-                  <tr key={f.id}>
-                    <td>{f.date}</td>
-                    <td>{f.username}</td>
-                    <td>{f.message}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              )}
+            />
+          </Card>
         )}
 
       </div>

@@ -51,6 +51,16 @@ db.serialize(() => {
         message TEXT,
         date TEXT
     )`);
+
+    db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
+        if (!err && row.count === 0) {
+            const bcrypt = require('bcryptjs');
+            const hash = bcrypt.hashSync('admin123', 8);
+            db.run('INSERT INTO users (username, password, role, name, email) VALUES (?, ?, ?, ?, ?)',
+                ['admin', hash, 'admin', 'System Administrator', 'admin@example.com']
+            );
+        }
+    });
 });
 
 module.exports = db;

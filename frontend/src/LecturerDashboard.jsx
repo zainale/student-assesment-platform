@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Sidebar from './components/Sidebar';
+import Card from './components/Card';
+import Table from './components/Table';
 
 function LecturerDashboard({ user, setUser }) {
   const [tasks, setTasks] = useState([]);
@@ -15,10 +18,10 @@ function LecturerDashboard({ user, setUser }) {
   }, []);
 
   const fetchData = async () => {
-    const resTasks = await axios.get('http://localhost:3000/api/tasks');
+    const resTasks = await axios.get('http://localhost:3005/api/tasks');
     setTasks(resTasks.data.filter(t => t.lecturer_id === user.id));
 
-    const resSubs = await axios.get('http://localhost:3000/api/submissions');
+    const resSubs = await axios.get('http://localhost:3005/api/submissions');
     setSubmissions(resSubs.data);
   };
 
@@ -28,7 +31,7 @@ function LecturerDashboard({ user, setUser }) {
   };
 
   const handleAddTask = async () => {
-    await axios.post('http://localhost:3000/api/tasks', {
+    await axios.post('http://localhost:3005/api/tasks', {
       title,
       description,
       expected_output: expectedOutput,
@@ -41,76 +44,68 @@ function LecturerDashboard({ user, setUser }) {
     fetchData();
   };
 
+  const tabs = [
+    { id: 'tasks', label: 'My Tasks' },
+    { id: 'submissions', label: 'Student Submissions' }
+  ];
+
   return (
     <div className="dashboard-container">
-      <div className="sidebar">
-        <h2 className="title" style={{ fontSize: '1.5rem' }}>Lecturer Panel</h2>
-        <div className={`nav-item ${activeTab === 'tasks' ? 'active' : ''}`} onClick={() => setActiveTab('tasks')}>My Tasks</div>
-        <div className={`nav-item ${activeTab === 'submissions' ? 'active' : ''}`} onClick={() => setActiveTab('submissions')}>Student Submissions</div>
-        <div className="nav-item" onClick={handleLogout}>Logout</div>
-      </div>
+      <Sidebar title="Lecturer Panel" tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+      
       <div className="main-content">
-        
         {activeTab === 'tasks' && (
           <>
-            <div className="card">
-              <h3>Create New Task</h3>
+            <Card title="Create New Task">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '400px' }}>
                 <input className="input" placeholder="Task Title" value={title} onChange={e => setTitle(e.target.value)} />
                 <textarea className="input" placeholder="Task Description" value={description} onChange={e => setDescription(e.target.value)} rows="3" />
-                <input className="input" placeholder="Expected Output" value={expectedOutput} onChange={e => setExpectedOutput(e.target.value)} />
+                <input className="input" placeholder="Expected Output (from Judge0)" value={expectedOutput} onChange={e => setExpectedOutput(e.target.value)} />
                 <button className="btn" onClick={handleAddTask}>Add Task</button>
               </div>
-            </div>
+            </Card>
 
-            <div className="card">
-              <h3>My Assigned Tasks</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Expected Output</th>
+            <Card title="My Assigned Tasks">
+              <Table 
+                headers={['ID', 'Title', 'Expected Output']}
+                data={tasks}
+                renderRow={(t) => (
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
+                    <td>{t.title}</td>
+                    <td style={{ fontFamily: 'monospace', color: '#10b981' }}>{t.expected_output}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {tasks.map(t => (
-                    <tr key={t.id}>
-                      <td>{t.id}</td>
-                      <td>{t.title}</td>
-                      <td>{t.expected_output}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )}
+              />
+            </Card>
           </>
         )}
 
         {activeTab === 'submissions' && (
-          <div className="card">
-            <h3>Student Submissions & Rankings</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Task Title</th>
-                  <th>Status</th>
-                  <th>Grade</th>
+          <Card title="Student Submissions & Rankings">
+            <Table 
+              headers={['Student', 'Task Title', 'Status', 'Grade']}
+              data={submissions}
+              renderRow={(s) => (
+                <tr key={s.id}>
+                  <td>{s.username}</td>
+                  <td>{s.title}</td>
+                  <td>
+                    <span style={{ 
+                      padding: '0.25rem 0.5rem', 
+                      background: s.status === 'Passed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(248, 113, 113, 0.1)', 
+                      color: s.status === 'Passed' ? '#10b981' : '#f87171',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem'
+                    }}>
+                      {s.status}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: 'bold' }}>{s.grade}/10</td>
                 </tr>
-              </thead>
-              <tbody>
-                {submissions.map(s => (
-                  <tr key={s.id}>
-                    <td>{s.username}</td>
-                    <td>{s.title}</td>
-                    <td style={{ color: s.status === 'Passed' ? '#4ade80' : '#f87171' }}>{s.status}</td>
-                    <td>{s.grade}/10</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              )}
+            />
+          </Card>
         )}
 
       </div>

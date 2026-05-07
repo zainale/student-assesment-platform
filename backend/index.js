@@ -75,23 +75,36 @@ app.get('/api/tasks', (req, res) => {
     });
 });
 
-app.post('/api/execute', (req, res) => {
+app.post('/api/execute', async (req, res) => {
     const { code, expected_output, student_id, task_id } = req.body;
     let status = 'Failed';
     let grade = 0;
+    let actual_output = 'Error executing code';
     
-    if (code.includes('System.out.println') || code.includes('return')) {
-        if (code.includes(expected_output)) {
+    try {
+        const axios = require('axios');
+        const judgeRes = await axios.post('https://ce.judge0.com/submissions?wait=true', {
+            source_code: code,
+            language_id: 62, // 62 is Java (OpenJDK 13.0.1)
+            expected_output: expected_output
+        });
+
+        const data = judgeRes.data;
+        actual_output = data.stdout || data.stderr || data.compile_output || 'No output';
+        
+        if (data.status && data.status.id === 3) { // 3 is Accepted
             status = 'Passed';
             grade = 10;
-        } else if (expected_output === 'Hello World' && code.includes('Hello World')) {
-            status = 'Passed';
-            grade = 10;
-        } else {
+        } else if (data.status && data.status.id === 4) { // 4 is Wrong Answer
             status = 'Compiled - Wrong Output';
+            grade = 0;
+        } else {
+            status = data.status ? data.status.description : 'Compilation Error';
+            grade = 0;
         }
-    } else {
-        status = 'Compilation Error';
+    } catch (error) {
+        console.error(error);
+        status = 'Server Error';
     }
 
     if (student_id && task_id) {
@@ -103,7 +116,7 @@ app.post('/api/execute', (req, res) => {
         );
     }
 
-    res.json({ status, output: status === 'Passed' ? expected_output : 'Error output', grade });
+    res.json({ status, output: actual_output, grade });
 });
 
 app.get('/api/submissions', (req, res) => {
@@ -140,6 +153,6 @@ app.get('/api/feedbacks', (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+app.listen(3005, () => {
+    console.log('Server running on port 3005');
 });
