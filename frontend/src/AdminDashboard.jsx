@@ -71,7 +71,7 @@ function AdminDashboard({ setUser }) {
                   <tr key={u.id}>
                     <td>{u.name}</td>
                     <td>{u.username}</td>
-                    <td><span style={{ padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.85rem' }}>{u.role}</span></td>
+                    <td><span style={{ padding: '0.25rem 0.5rem', background: '#f3f4f6', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '0.85rem' }}>{u.role}</span></td>
                   </tr>
                 )}
               />

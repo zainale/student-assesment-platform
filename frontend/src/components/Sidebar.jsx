@@ -2,9 +2,9 @@ import React from 'react';
 
 function Sidebar({ title, tabs, activeTab, setActiveTab, onLogout }) {
   return (
-    <div className="sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
-      <h2 className="title" style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>{title}</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flexGrow: 1 }}>
+    <div className="sidebar">
+      <h2 className="title">{title}</h2>
+      <div className="nav-container">
         {tabs.map(tab => (
           <div 
             key={tab.id}
@@ -15,7 +15,7 @@ function Sidebar({ title, tabs, activeTab, setActiveTab, onLogout }) {
           </div>
         ))}
       </div>
-      <div className="nav-item" onClick={onLogout} style={{ marginTop: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+      <div className="nav-item logout" onClick={onLogout}>
         Logout
       </div>
     </div>

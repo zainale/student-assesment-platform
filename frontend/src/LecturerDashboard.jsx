@@ -93,8 +93,9 @@ function LecturerDashboard({ user, setUser }) {
                   <td>
                     <span style={{ 
                       padding: '0.25rem 0.5rem', 
-                      background: s.status === 'Passed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(248, 113, 113, 0.1)', 
-                      color: s.status === 'Passed' ? '#10b981' : '#f87171',
+                      background: s.status === 'Passed' ? 'var(--success-light)' : 'var(--error-light)', 
+                      color: s.status === 'Passed' ? 'var(--success)' : 'var(--error)',
+                      border: s.status === 'Passed' ? '1px solid var(--success)' : '1px solid var(--error)',
                       borderRadius: '4px',
                       fontSize: '0.85rem'
                     }}>
